@@ -1,18 +1,8 @@
 // code reference: https://www.geeksforgeeks.org/introduction-to-levenshtein-distance/
 
-fn main() {
-    let left = "hiro";
-    let right = "hironha";
-
-    let dist = levenshtein_dynamic(left, right);
-    println!("Distance between {left} and {right}: {dist}");
-
-    let dist = levenshtein_matrix(left, right);
-    println!("Distance between {left} and {right}: {dist}");
-}
-
 // uses dynamic programming to avoid allocating matrix
-fn levenshtein_dynamic(left: &str, right: &str) -> usize {
+#[must_use]
+pub fn levenshtein_dynamic(left: &str, right: &str) -> usize {
     if left.is_empty() || right.is_empty() {
         return left.len().max(right.len());
     }
@@ -43,11 +33,11 @@ fn levenshtein_dynamic(left: &str, right: &str) -> usize {
         prev.clone_from(&curr);
     }
 
-    curr.last().copied().unwrap()
+    curr[n - 1]
 }
 
 // uses a matrix to calculate distance
-fn levenshtein_matrix(left: &str, right: &str) -> usize {
+pub fn levenshtein_matrix(left: &str, right: &str) -> usize {
     let left: Vec<char> = left.chars().collect();
     let right: Vec<char> = right.chars().collect();
     let rows = left.len() + 1;
@@ -66,18 +56,60 @@ fn levenshtein_matrix(left: &str, right: &str) -> usize {
 
     for i in 1..rows {
         for j in 1..cols {
-            // get min value around
-            let min = matrix[i][j - 1] // left
-                .min(matrix[i - 1][j]) // top
-                .min(matrix[i - 1][j - 1]); // left + top
-
             if left[i - 1] == right[j - 1] {
-                matrix[i][j] = min;
+                matrix[i][j] = matrix[i - 1][j - 1];
             } else {
+                let min = matrix[i][j - 1]
+                    .min(matrix[i - 1][j])
+                    .min(matrix[i - 1][j - 1]);
+
                 matrix[i][j] = min + 1;
             }
         }
     }
 
     matrix[left.len()][right.len()]
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{levenshtein_dynamic, levenshtein_matrix};
+
+    #[test]
+    fn dynamic() {
+        let left = "hiro";
+        let right = "hironha";
+        assert_eq!(levenshtein_dynamic(left, right), 3);
+
+        let left = "teste";
+        let right = "test";
+        assert_eq!(levenshtein_dynamic(left, right), 1);
+
+        let left = "assert";
+        let right = "asert";
+        assert_eq!(levenshtein_dynamic(left, right), 1);
+
+        let left = "schwarzenegger";
+        let right = "schawarnagger";
+        assert_eq!(levenshtein_dynamic(left, right), 4);
+    }
+
+    #[test]
+    fn matrxi() {
+        let left = "hiro";
+        let right = "hironha";
+        assert_eq!(levenshtein_matrix(left, right), 3);
+
+        let left = "teste";
+        let right = "test";
+        assert_eq!(levenshtein_matrix(left, right), 1);
+
+        let left = "assert";
+        let right = "asert";
+        assert_eq!(levenshtein_matrix(left, right), 1);
+
+        let left = "schwarzenegger";
+        let right = "schawarnagger";
+        assert_eq!(levenshtein_matrix(left, right), 4);
+    }
 }
