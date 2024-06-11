@@ -1,0 +1,12 @@
+[package]
+name = "quicksort"
+version = "0.1.0"
+edition = "2021"
+
+[profile.dev]
+debug = false
+
+[profile.release]
+lto = "thin"
+
+[dependencies]
